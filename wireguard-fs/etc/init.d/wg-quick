@@ -21,6 +21,16 @@ start() {
     eend 0
 }
 
+post_start() {
+    # Проверка, что интерфейс awg0 активен
+    if ip addr show | grep -q "awg0"; then
+        einfo "Applying iptables rule for awg0 interface"
+        iptables -t nat -A POSTROUTING -o awg0 -j MASQUERADE
+    else
+        ewarn "awg0 interface is not active"
+    fi
+}
+
 stop() {
     for file in $(grep '\[Interface\]' /etc/amnezia/amneziawg/*.conf -l 2>/dev/null); do
         interface=$(basename $file .conf)
