@@ -1,5 +1,5 @@
 ARG GOLANG_VERSION=1.22
-ARG ALPINE_VERSION=3.20
+ARG ALPINE_VERSION=3.18
 FROM golang:${GOLANG_VERSION}-alpine${ALPINE_VERSION} AS builder
 
 RUN apk update && apk add --no-cache git make bash build-base linux-headers
@@ -12,7 +12,7 @@ RUN cd /go/amneziawg-tools/src && \
 
 
 FROM alpine:${ALPINE_VERSION}
-RUN apk update && apk add --no-cache bash openrc iptables-legacy iproute2 openresolv \
+RUN apk update && apk add --no-cache bash openrc iptables iproute2 openresolv \
     && mkdir -p /etc/amnezia/amneziawg/
 
 COPY --from=builder /go/amneziawg-go/amneziawg-go /usr/bin/amneziawg-go
@@ -34,15 +34,13 @@ RUN \
         /etc/init.d/hwdrivers \
         /etc/init.d/machine-id
 RUN    sed -i 's/cmd sysctl -q \(.*\?\)=\(.*\)/[[ "$(sysctl -n \1)" != "\2" ]] \&\& \0/' /usr/bin/awg-quick
-RUN \
-    ln -s /sbin/iptables-legacy /bin/iptables && \
-    ln -s /sbin/iptables-legacy-save /bin/iptables-save && \
-    ln -s /sbin/iptables-legacy-restore /bin/iptables-restore
+
 # register /etc/init.d/wg-quick
 RUN rc-update add wg-quick default
 
 RUN echo -e " \n\
     # Note, that syncookies is fallback facility. It MUST NOT be used to help highly loaded servers to stand against legal connection rate.\n\
+    net.ipv4.ip_forward = 1 \n\
     net.ipv4.tcp_syncookies = 0 \n\
     net.ipv4.tcp_keepalive_time = 600 \n\
     net.ipv4.tcp_keepalive_intvl = 60 \n\
