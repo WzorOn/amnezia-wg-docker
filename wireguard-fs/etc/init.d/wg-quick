@@ -17,18 +17,9 @@ start() {
         interface=$(basename $file .conf)
         ebegin "Starting Amnezia WG interface $interface"
         /usr/bin/awg-quick up $file
+        iptables -t nat -A POSTROUTING -o awg0 -j MASQUERADE
     done
     eend 0
-}
-
-post_start() {
-    # Checking that interface awg0 is active
-    if ip addr show | grep "awg0"; then
-        einfo "Applying iptables rule for awg0 interface"
-        iptables -t nat -A POSTROUTING -o awg0 -j MASQUERADE
-    else
-        ewarn "awg0 interface is not active"
-    fi
 }
 
 stop() {
