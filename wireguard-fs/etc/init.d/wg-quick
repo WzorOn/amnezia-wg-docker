@@ -23,7 +23,7 @@ start() {
 
 post_start() {
     # Checking that interface awg0 is active
-    if ip addr show | grep -q "awg0"; then
+    if ip addr show | grep "awg0"; then
         einfo "Applying iptables rule for awg0 interface"
         iptables -t nat -A POSTROUTING -o awg0 -j MASQUERADE
     else
